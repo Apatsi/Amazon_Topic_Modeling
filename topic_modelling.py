@@ -266,6 +266,7 @@ if __name__ == "__main__":
     pyLDAvis.save_html(vis, 'LDA_Visualization.html')
     print(vis)
 
+    # Testing with random reviews from Amazon
     test_doc = np.array(["I bought these on Prime Day because I needed some less expensive headphones to use while mowing the lawn. "
                          "Right out of the box, it took only seconds to connect to my iPhone. "
                          "The sound quality wasn't quite what you would get with an expensive set, but I didn't expect that. Still, the sound quality was great and they were powerful enough that I was concerned that my very loud lawnmower wasn't working correctly. "
