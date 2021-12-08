@@ -3,49 +3,33 @@ if __name__ == "__main__":
     # Importing the Libraries
     import numpy as np
     import pandas as pd
-    import matplotlib.pyplot as plt
-    import seaborn as sns
     import warnings
     import sys
+    import logging
     # Statistical tests tools
     import statsmodels.api as sm
     import statsmodels.formula.api as smf
+    from scipy.stats.mstats import normaltest  # D'Agostino K^2 Test
+    # NLP tools
     import nltk
+    from nltk.stem import WordNetLemmatizer
     from nltk.corpus import stopwords
     from nltk.stem import SnowballStemmer
-    import re
-    import tensorflow as tf
-    from scipy.stats.mstats import normaltest  # D'Agostino K^2 Test
-    from keras.preprocessing.sequence import pad_sequences
-    from keras.preprocessing.text import Tokenizer
-    import gensim  # gensim for LDA
-    import gensim.corpora as corpora
-    from gensim.utils import simple_preprocess
-    from gensim.models import CoherenceModel, LdaModel, LdaMulticore, TfidfModel
-    # Visualization tools
-    import pyLDAvis
-    import pyLDAvis.gensim_models as gensimvis
-    from nltk.stem import WordNetLemmatizer
-    from gensim.test.utils import datapath
-    import pyLDAvis
-    import pyLDAvis.sklearn
-    import pyLDAvis.gensim_models  # dont skip this
-    import IPython
-    import Pyro4
     import contractions as ct
-    from GridSearch import compute_coherence_values
-    import os
-
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    print(dir_path)
-    print(type(dir_path))
-
-    temp_file = datapath("path")
-    print(temp_file)
-
-    warnings.filterwarnings('ignore', category=DeprecationWarning)
+    import re  # regular expressions
+    import tensorflow as tf
+    import gensim  # topic modelling
+    import gensim.corpora as corpora
+    from gensim.models import LdaMulticore, CoherenceModel
+    from utils import grid_search_coherence
+    # Visualization tools
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    import pyLDAvis.gensim_models
 
     print(__name__)  # __name__ = __main__
+    warnings.filterwarnings('ignore', category=DeprecationWarning)
+
     nltk.download('wordnet')
     nltk.download('stopwords')
 
@@ -60,13 +44,10 @@ if __name__ == "__main__":
     np.set_printoptions(linewidth=desired_width)
     pd.set_option('display.max_columns', None)
 
-    df = pd.read_json('D:/Akisp/Downloads/dataset/Electronics_final.json', lines=True)
+    df = pd.read_json('Electronics_final.json', lines=True)
     print("Shape of data: {}".format(df.shape))
     print(df.head(20))
-
-    # df = pd.read_csv('D:/Akisp/Downloads/dataset/Amazon Reviews.csv', encoding='latin-1')
-    # print("Shape of data:", df.shape, "\n")
-    # print(df.head())
+    logging.info('dataframe head - {}'.format(df.head()))
 
     # The variable named "reviewText" is the object of our analysis
     df_check_dupl = df.duplicated(subset=['reviewText'], keep=False)
@@ -93,6 +74,7 @@ if __name__ == "__main__":
     stemmer = SnowballStemmer('english')
     lemm = WordNetLemmatizer()
 
+    # Remove punctuation, Hypertext Transfer Protocols, whitespaces
     text_cleaning_re = "@\S+|https?:\S+|http?:\S|[^A-Za-z0-9]+"
 
     def Contractions(text):
@@ -221,8 +203,6 @@ if __name__ == "__main__":
     # Finding and dropping reviews with empty lists or 1 word after filtering the extreme words
     corpus = [cp for cp in corpus if len(cp) > 1]
 
-    print("hello world")
-
     # for review in corpus:  # words that occur more frequently across the documents get smaller weights
     #     print([[id2word[id], freq] for id, freq in review])
 
@@ -231,7 +211,7 @@ if __name__ == "__main__":
     # is modeled as a finite mixture over an underlying set of topics.
     num_topics_range = [8]
     learning_decay_range = [0.50]
-    model_list, coherence_values = compute_coherence_values(dictionary=id2word, corpus=corpus, texts=df["reviewText"],
+    model_list, coherence_values = grid_search_coherence(dictionary=id2word, corpus=corpus, texts=df["reviewText"],
                                                             learning_decay_range=learning_decay_range,
                                                             num_topics_range=num_topics_range)
 
@@ -244,15 +224,15 @@ if __name__ == "__main__":
 
     best_lda_model = LdaMulticore(corpus=corpus, id2word=id2word, decay=best_coh_value["learning_decay"].iloc[0],
                                   num_topics=best_coh_value["num_topics"].iloc[0], random_state=42,
-                                  passes=10, per_word_topics=True)
+                                  chunksize=len(corpus), passes=15, per_word_topics=True)
 
     print("The best LDA model after hyperparameter tuning is: {}\n".format(best_lda_model))
 
     # save model to disk (no need to use pickle module)
-    best_lda_model.save("LDA.model")
+    best_lda_model.save("model/LDA.model")
 
     # Load a potentially pretrained model from disk.
-    # lda = best_lda_model.load("LDA.model")
+    # lda = best_lda_model.load("model/LDA.model")
 
     topics = best_lda_model.print_topics()
     for topic in topics:
@@ -298,5 +278,5 @@ if __name__ == "__main__":
     df_test["TEST"] = df_test["TEST"].apply(lambda x: Tokenization(x))
     df_test["TEST"] = df_test["TEST"].apply(lambda x: Bigrams(x))
     print(df_test)
-    bow_test_doc = id2word.doc2bow(df_test["TEST"])
+    bow_test_doc = [id2word.doc2bow(text) for text in df_test["TEST"]]
     print(best_lda_model.get_document_topics(bow_test_doc))

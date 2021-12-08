@@ -1,14 +1,14 @@
-from gensim.models import CoherenceModel, LdaMulticore
+from gensim.models import LdaMulticore, CoherenceModel
 
 
 # compute coherence value at various values of decay and num_topics
-def compute_coherence_values(corpus, dictionary, texts, learning_decay_range, num_topics_range):
+def grid_search_coherence(corpus, dictionary, texts, learning_decay_range, num_topics_range):
     coherence_values = []
     model_list = []
     for num_topics in num_topics_range:
         for learning_decay in learning_decay_range:
-            lda_model = LdaMulticore(corpus=corpus, id2word=dictionary, num_topics=num_topics,
-                                     random_state=100, decay=learning_decay, passes=10, per_word_topics=True)
+            lda_model = LdaMulticore(corpus=corpus, id2word=dictionary, num_topics=num_topics, chunksize=len(corpus),
+                                     random_state=42, decay=learning_decay, passes=15, per_word_topics=True)
             model_list.append(lda_model)
 
             coherencemodel = CoherenceModel(model=lda_model, texts=texts,dictionary=dictionary, coherence='c_v')
