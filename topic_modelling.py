@@ -26,6 +26,21 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import seaborn as sns
     import pyLDAvis.gensim_models
+    # Web crawling tools
+    from utils import Amazon_crawler
+    import json
+
+    # In order to successfully crawl amazon data, the following arguments must be passed
+    proxies = {}
+    headers = {}
+    cookies = {}
+
+    reviews = Amazon_crawler(max_reviews_pages=5, max_asin_pages=10, headers=headers, cookies=cookies, proxies=proxies)
+    print("The first review of the dataset is: {}\n".format(list(reviews["reviewsText"])[0]))
+
+    # save the dataset in a json format
+    with open('amazon_electronics.json', 'w') as outfile:
+        json.dump(reviews, outfile)
 
     print(__name__)  # __name__ = __main__
     warnings.filterwarnings('ignore', category=DeprecationWarning)
@@ -44,7 +59,7 @@ if __name__ == "__main__":
     np.set_printoptions(linewidth=desired_width)
     pd.set_option('display.max_columns', None)
 
-    df = pd.read_json('Electronics_final.json', lines=True)
+    df = pd.read_json('amazon_electronics.json', lines=True)
     print("Shape of data: {}".format(df.shape))
     print(df.head(20))
     logging.info('dataframe head - {}'.format(df.head()))
