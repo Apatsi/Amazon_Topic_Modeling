@@ -6,7 +6,7 @@ The dataset is created using **Web Crawling** from the utils.py in the Electroni
 Remove punctuation, Hypertext Transfer Protocols, whitespaces.  
 Lowercase the words.  
 Words that have fewer than 3 characters are removed.  
-All stopwords are removed.  
+Remove stopwords.  
 Apply **Contraction**.  
 Apply **Stemming**.  
 Apply **Lemmatization**. 
