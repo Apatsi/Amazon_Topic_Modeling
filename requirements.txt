@@ -9,8 +9,8 @@ gensim==3.8.2
 scikit-learn==0.24.2
 nltk==3.6.5
 contractions==0.0.58
-tensorflow==2.5.0
-tensorflow-gpu==2.5.0
+tensorflow~=2.5.0
+tensorflow-gpu~=2.5.0
 pyLDAvis==3.3.1
 statsmodels==0.13.1
 scipy==1.7.1
