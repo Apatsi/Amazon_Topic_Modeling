@@ -15,4 +15,4 @@ Build **Bigrams**: a sequence of two adjacent elements from a string of tokens.
 Convert all the lists of words into the **BoW** format.  
 
 # About using TF-IDF before LDA
-LDA only needs a bag-of-word vector and TF-IDF corpus is not needed for LDA modelling based on the paper of 2003 (entitled "Latent Dirichlet Allocation") from Blei (who developed LDA). The algorithm is a word generating model, which assumes a word is generated from a multinomial distribution. It doesn't make sense to say 0.6 word (tf-idf frequency weight) is generated from some distribution.
+LDA only needs a Bag-of-Word vector and TF-IDF corpus is not needed for LDA modelling based on the paper of 2003 (entitled "Latent Dirichlet Allocation") from Blei (who developed LDA). The algorithm is a word generating model, which assumes a word is generated from a multinomial distribution. It doesn't make sense to say 0.6 word (tf-idf frequency weight) is generated from some distribution.
