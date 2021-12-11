@@ -9,7 +9,7 @@ Words that have fewer than 3 characters are removed.
 Remove stopwords.  
 Apply **Contraction**.  
 Apply **Stemming**.  
-Apply **Lemmatization**. 
+Apply **Lemmatization**.  
 Apply **Tokenization**: Split the sentences into words to prepare for LDA.  
 Build **Bigrams**: a sequence of two adjacent elements from a string of tokens.  
 Convert all the list of words into the **BoW** format.  
