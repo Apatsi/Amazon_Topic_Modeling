@@ -6,10 +6,6 @@ if __name__ == "__main__":
     import warnings
     import sys
     import logging
-    # Statistical tests tools
-    import statsmodels.api as sm
-    import statsmodels.formula.api as smf
-    from scipy.stats.mstats import normaltest  # D'Agostino K^2 Test
     # NLP tools
     import nltk
     from nltk.stem import WordNetLemmatizer
@@ -30,6 +26,7 @@ if __name__ == "__main__":
     from utils import Amazon_crawler
     import json
 
+    '''
     # In order to successfully crawl amazon data, the following arguments must be passed
     proxies = {}
     headers = {}
@@ -41,6 +38,7 @@ if __name__ == "__main__":
     # save the dataset in a json format
     with open('amazon_electronics.json', 'w') as outfile:
         json.dump(reviews, outfile)
+    '''
 
     print(__name__)  # __name__ = __main__
     warnings.filterwarnings('ignore', category=DeprecationWarning)
@@ -74,7 +72,7 @@ if __name__ == "__main__":
     print("{}\n".format(df.info()))
     print("Checking null values in the reviews BEFORE clearing\n{}\n".format(df.isnull().sum()))
 
-    df = df.dropna(subset=['reviewText'])  # 1 null value found and dropped
+    df = df.dropna(subset=['reviewText'])
     print("Checking null values in the reviews AFTER clearing\n{}\n".format(df.isnull().sum()))
 
     df['default_length_text'] = df['reviewText'].str.len()
@@ -86,6 +84,9 @@ if __name__ == "__main__":
 
     # Clearing, Stemming, Lemmatisation
     stop_words = stopwords.words('english')
+    extra_stopwords = ("amazon", "get", "one", "would", "use", "even")
+    for word in extra_stopwords:
+        stop_words.append(word)  # Extend the stopwords after debugging
     stemmer = SnowballStemmer('english')
     lemm = WordNetLemmatizer()
 
@@ -153,7 +154,7 @@ if __name__ == "__main__":
     def text_metrics(reviews):
         review_lengths = reviews.str.len()
         print("The average number of words in a review is: {}.".format(np.mean(review_lengths)))
-        print("The minimum number of words in a review is: {}.".format(min(review_lengths)))  # To index 461 einai adeio
+        print("The minimum number of words in a review is: {}.".format(min(review_lengths)))
         print("The maximum number of words in a review is: {}.".format(max(review_lengths)))
         print("The type of the object review lenghts is: {}".format(type(review_lengths)))  # Pandas series
         threshold_length = 40
@@ -185,7 +186,7 @@ if __name__ == "__main__":
     print("id2word_old: {}".format(id2word))
     print("Number of unique words in initital documents: {}\n".format(len(id2word)))
 
-    # ignore words that appear in less than 5 documents (misspells, unimportant words) or more than 90% documents
+    # ignore words that appear in less than 4 documents (misspells, unimportant words) or more than 90% documents
     id2word.filter_extremes(no_below=4, no_above=0.9)
     id2word.compactify()
     print("id2word_NEW: {}".format(id2word))
@@ -224,22 +225,23 @@ if __name__ == "__main__":
     # build LDA models across a range of number of topics and learning decay
     # LDA is a three-level hierarchical Bayesian model, in which each item of a collection
     # is modeled as a finite mixture over an underlying set of topics.
-    num_topics_range = [8]
-    learning_decay_range = [0.50]
+    num_topics_range = [8, 10, 12]
+    learning_decay_range = [0.50, 0.60, 0.75]
+    offset_range = [1.0, 10.0, 50.0]
     model_list, coherence_values = grid_search_coherence(dictionary=id2word, corpus=corpus, texts=df["reviewText"],
-                                                            learning_decay_range=learning_decay_range,
-                                                            num_topics_range=num_topics_range)
+                                                         learning_decay_range=learning_decay_range, offset_range=offset_range,
+                                                         num_topics_range=num_topics_range)
 
-    coherence_df = pd.DataFrame(coherence_values, columns=['learning_decay', 'num_topics', 'coherence_value',
-                                                           'perplexity_value'])
+    coherence_df = pd.DataFrame(coherence_values, columns=['learning_decay', 'offset_range', 'num_topics',
+                                                           'coherence_value', 'perplexity_value'])
     print("\nGrid Search results:\n{}\n".format(coherence_df))
 
     best_coh_value = coherence_df.loc[coherence_df["coherence_value"] == coherence_df["coherence_value"].max(), :]
     print("The best parameters from Grid Search are:\n{}\n".format(best_coh_value))
 
     best_lda_model = LdaMulticore(corpus=corpus, id2word=id2word, decay=best_coh_value["learning_decay"].iloc[0],
-                                  num_topics=best_coh_value["num_topics"].iloc[0], random_state=42,
-                                  chunksize=len(corpus), passes=15, per_word_topics=True)
+                                  num_topics=best_coh_value["num_topics"].iloc[0], offset=best_coh_value["offset"].iloc[0],
+                                  random_state=42, chunksize=len(corpus), passes=15, per_word_topics=True)
 
     print("The best LDA model after hyperparameter tuning is: {}\n".format(best_lda_model))
 
@@ -269,7 +271,7 @@ if __name__ == "__main__":
     sns.pointplot(x="num_topics", y="coherence_value", hue="learning_decay",
                   data=coherence_df, dodge=True, join=False)
 
-    # # # Would need a good way to show three error bars
+    # # Would need a good way to show three error bars
     # plt.errorbar(x=results['param_n_components'],
     #              y=results.mean_test_score,
     #              yerr=results.std_test_score,
