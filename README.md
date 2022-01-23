@@ -1,7 +1,7 @@
 # Amazon Topic Modeling
 This project analysed the products on Amazon by creating topics based on customers reviews. Each of the reviews will be analysed using the Latent Dirichlet Allocation (**LDA**) algorithm to classify text to a particular topic. The most important (semantic and syntactic) keywords will be used to derive the topic cluster.
  
-The dataset is created using **Web Crawling** from the utils.py in the Electronics category. The following preprocessing procedure steps were performed:
+The dataset is created using **Web Scrapping** from the utils.py in the Electronics category. The following preprocessing procedure steps were performed:
 
 Remove punctuation, Hypertext Transfer Protocols, whitespaces.  
 Lowercase the words.  
